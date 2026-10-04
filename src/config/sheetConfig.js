@@ -7,4 +7,5 @@
 // 3. Or paste it directly below as the fallback string.
 
 export const GOOGLE_SHEETS_URL =
-  import.meta.env.VITE_GOOGLE_SHEETS_URL || '';
+  import.meta.env.VITE_GOOGLE_SHEETS_URL ||
+  'https://script.google.com/macros/s/AKfycbz9FW0c8MZeA1A2ruYDyqTQkNEHQwM5IzPfjyrktE6_n-hxKfnUOgtff0YG4CQFoPz-ig/exec';
