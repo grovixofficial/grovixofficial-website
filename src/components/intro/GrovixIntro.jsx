@@ -14,7 +14,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
   const [shouldRender, setShouldRender] = useState(true);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined') {
-      return window.innerWidth < 640;
+      return window.innerWidth < 768;
     }
     return false;
   });
@@ -22,10 +22,9 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
   const backdropRef = useRef(null);
   const introLayerRef = useRef(null);
   const centerAnchorRef = useRef(null);
+  const mobileCardRef = useRef(null);
   const skipRef = useRef(null);
   const tlRef = useRef(null);
-
-
 
   // Pure Percentage Counter Ref (ONLY NUMBER)
   const counterBoxRef = useRef(null);
@@ -38,10 +37,10 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
 
   useEffect(() => {
     const handleResize = () => {
-      const mobile = window.innerWidth < 640;
+      const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResize, { passive: true });
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
@@ -75,54 +74,28 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
 
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
-      const isMobileView = screenW < 640;
+      const isMobileView = screenW < 768;
 
       // 1. DYNAMIC ANCHOR SIZING & PLACEMENT
-      let anchorW, anchorH, targetScale, targetX, targetY, clipPercent;
+      let anchorW, anchorH, targetScale, targetX, targetY;
 
       if (isMobileView) {
-        // Mobile dimensions (Sadu Media vertical split layout)
-        anchorW = Math.min(screenW * 0.78, 310);
-        anchorH = anchorW * 0.62; // ~16:10 aspect ratio preview
-
-        if (centerAnchorRef.current) {
-          centerAnchorRef.current.style.width = `${anchorW}px`;
-          centerAnchorRef.current.style.height = `${anchorH}px`;
-        }
-
-        targetScale = anchorW / screenW;
-        const rect = centerAnchorRef.current.getBoundingClientRect();
-        const anchorCenterX = rect.left + rect.width / 2;
-        const anchorCenterY = rect.top + rect.height / 2;
-
-        const visibleUnscaledH = anchorH / targetScale;
-        const visibleFraction = Math.min(visibleUnscaledH / screenH, 1.0);
-        clipPercent = Math.max(0, (1.0 - visibleFraction) * 100);
-
-        const visibleCenterYPercent = visibleFraction / 2;
-        targetX = anchorCenterX - screenW / 2;
-        targetY = anchorCenterY - screenH * visibleCenterYPercent;
-
+        // MOBILE ULTRA-PERFORMANCE ARCHITECTURE:
+        // Never 3D-transform, scale, or clip the massive 15,000px live DOM tree on mobile phones.
+        // Keep liveSite sitting normal and hidden until reveal, ensuring 60-120fps on any phone.
         if (liveSiteRef?.current) {
           gsap.set(liveSiteRef.current, {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            overflow: 'hidden',
-            zIndex: 90,
-            transformOrigin: `50% ${(visibleCenterYPercent * 100).toFixed(2)}%`,
-            x: targetX,
-            y: targetY,
-            scale: targetScale * 0.72,
-            rotateY: -180,
-            transformPerspective: 1000,
-            clipPath: `inset(0% 0% ${clipPercent.toFixed(2)}% 0% round 14px)`,
-            border: '1.5px solid rgba(255,255,255,0.35)',
-            boxShadow: '0 16px 45px rgba(0,0,0,0.95), 0 0 30px rgba(47,79,210,0.25)',
-            pointerEvents: 'none',
             opacity: 0,
+            pointerEvents: 'none',
+          });
+        }
+
+        if (mobileCardRef.current) {
+          gsap.set(mobileCardRef.current, {
+            rotateY: -180,
+            opacity: 0,
+            scale: 0.82,
+            transformPerspective: 800,
           });
         }
       } else {
@@ -298,7 +271,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         );
       }
 
-      // Pure Percentage Counter Animation (0% -> 100%)
+      // Pure Percentage Counter Animation (0% -> 100%) - Snappy & dynamic
       const counterObj = { val: 0 };
       const updateCounter = () => {
         if (counterNumRef.current) {
@@ -307,41 +280,46 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         }
       };
 
+      const cDur1 = isMobileView ? 0.32 : 0.55;
+      const cDur2 = isMobileView ? 0.32 : 0.65;
+      const cDur3 = isMobileView ? 0.22 : 0.5;
+      const cDur4 = isMobileView ? 0.18 : 0.4;
+
       tl.to(
         counterObj,
         {
-          val: 32,
-          duration: 0.55,
+          val: 35,
+          duration: cDur1,
           ease: 'power1.out',
           onUpdate: updateCounter,
         },
-        0.1
+        0.05
       )
       .to(
         counterObj,
         {
-          val: 68,
-          duration: 0.65,
+          val: 72,
+          duration: cDur2,
           ease: 'power2.inOut',
           onUpdate: updateCounter,
         },
-        '+=0.08'
+        '+=0.04'
       )
       .to(
         counterObj,
         {
           val: 94,
-          duration: 0.5,
+          duration: cDur3,
           ease: 'power1.out',
           onUpdate: updateCounter,
         },
-        '+=0.1'
+        '+=0.04'
       )
       .to(
         counterObj,
         {
           val: 100,
-          duration: 0.4,
+          duration: cDur4,
           ease: 'power3.out',
           onUpdate: updateCounter,
           onComplete: () => {
@@ -350,7 +328,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             }
           },
         },
-        '+=0.1'
+        '+=0.04'
       );
 
 
@@ -360,11 +338,11 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 0.5,
-          stagger: 0.035,
+          duration: isMobileView ? 0.35 : 0.5,
+          stagger: isMobileView ? 0.025 : 0.035,
           ease: 'power3.out',
         },
-        0.15
+        0.12
       )
 
       // 3. Letters of "WE" fly in from multi-directions
@@ -378,15 +356,29 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
           scale: 1,
           opacity: 1,
           filter: 'blur(0px)',
-          duration: 0.65,
-          stagger: 0.08,
+          duration: isMobileView ? 0.45 : 0.65,
+          stagger: 0.06,
           ease: 'back.out(1.5)',
         },
         '-=0.2'
       );
 
-      // 4. Center Live Website CARD 3D FLIP!
-      if (liveSiteRef?.current) {
+      // 4. Center Preview Card / Live Site 3D Flip
+      if (isMobileView) {
+        if (mobileCardRef.current) {
+          tl.to(
+            mobileCardRef.current,
+            {
+              rotateY: 0,
+              opacity: 1,
+              scale: 1,
+              duration: 0.55,
+              ease: 'back.out(1.4)',
+            },
+            '-=0.35'
+          );
+        }
+      } else if (liveSiteRef?.current) {
         tl.to(
           liveSiteRef.current,
           {
@@ -411,11 +403,11 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
           scale: 1,
           opacity: 1,
           filter: 'blur(0px)',
-          duration: 0.6,
-          stagger: 0.045,
+          duration: isMobileView ? 0.45 : 0.6,
+          stagger: 0.035,
           ease: 'back.out(1.5)',
         },
-        '-=0.75'
+        '-=0.55'
       )
 
       // 6. Letters of "GROVIX" fly in from multi-directions
@@ -429,11 +421,11 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
           scale: 1,
           opacity: 1,
           filter: 'blur(0px)',
-          duration: 0.65,
-          stagger: 0.05,
+          duration: isMobileView ? 0.45 : 0.65,
+          stagger: 0.04,
           ease: 'back.out(1.5)',
         },
-        '-=0.55'
+        '-=0.45'
       )
 
       // 7. Bottom Tagline reveals word-by-word
@@ -442,38 +434,45 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         {
           yPercent: 0,
           opacity: 1,
-          duration: 0.45,
-          stagger: 0.05,
+          duration: isMobileView ? 0.35 : 0.45,
+          stagger: 0.04,
           ease: 'power3.out',
         },
-        '-=0.35'
+        '-=0.3'
       )
 
-      // 8. Hold moment for user appreciation
-      .to({}, { duration: 1.3 })
+      // 8. Hold moment for user appreciation (fast & crisp on mobile)
+      .to({}, { duration: isMobileView ? 0.55 : 1.2 })
 
       // 9. Exit Animation:
       if (isMobileView) {
-        // Vertical Split Outro (Identical to Sadu Media mobile video):
-        // Top block (WE BUILD) moves UP, Bottom block (GROVIX) moves DOWN
+        // High-Performance Mobile Vertical Split Outro
         tl.to(
           ['.gsap-kicker-word', '.gsap-mobile-top-block'],
           {
-            y: -65,
+            y: -35,
             opacity: 0,
-            filter: 'blur(4px)',
-            duration: 0.45,
-            ease: 'power3.in',
+            duration: 0.3,
+            ease: 'power2.in',
           }
+        )
+        .to(
+          mobileCardRef.current,
+          {
+            scale: 1.05,
+            opacity: 0,
+            duration: 0.28,
+            ease: 'power2.in',
+          },
+          '<'
         )
         .to(
           ['.gsap-mobile-bottom-block', '.gsap-tagline-word'],
           {
-            y: 65,
+            y: 35,
             opacity: 0,
-            filter: 'blur(4px)',
-            duration: 0.45,
-            ease: 'power3.in',
+            duration: 0.3,
+            ease: 'power2.in',
           },
           '<'
         );
@@ -537,7 +536,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         '-=0.35'
       );
 
-      // 10. Live website frame seamlessly expands from center window to full screen!
+      // 10. Live website frame reveal!
       isIntroActive.current = false;
       if (tiltWrapperRef.current) {
         tl.to(
@@ -566,23 +565,40 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         );
       }
 
-
-      if (liveSiteRef?.current) {
-        let expandVars = {
-          x: 0,
-          y: 0,
-          scale: 1,
-          rotateY: 0,
-          borderRadius: '0px',
-          borderWidth: '0px',
-          boxShadow: 'none',
-          duration: 0.95,
-          ease: 'expo.inOut',
-        };
-        if (isMobileView) {
-          expandVars.clipPath = 'inset(0% 0% 0% 0% round 0px)';
+      if (isMobileView) {
+        // MOBILE: Seamlessly fade-in live site with zero DOM recalculation or layout jerk
+        if (liveSiteRef?.current) {
+          tl.to(
+            liveSiteRef.current,
+            {
+              opacity: 1,
+              duration: 0.4,
+              ease: 'power2.out',
+              onComplete: () => {
+                if (liveSiteRef?.current) {
+                  gsap.set(liveSiteRef.current, { clearProps: 'all' });
+                }
+              },
+            },
+            '-=0.2'
+          );
         }
-        tl.to(liveSiteRef.current, expandVars, '-=0.35');
+      } else {
+        // DESKTOP: Expand from center window to full screen
+        if (liveSiteRef?.current) {
+          let expandVars = {
+            x: 0,
+            y: 0,
+            scale: 1,
+            rotateY: 0,
+            borderRadius: '0px',
+            borderWidth: '0px',
+            boxShadow: 'none',
+            duration: 0.85,
+            ease: 'expo.inOut',
+          };
+          tl.to(liveSiteRef.current, expandVars, '-=0.35');
+        }
       }
 
       // Backdrop fades away revealing real site
@@ -609,28 +625,40 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       gsap.set(counterBoxRef.current, { opacity: 0 });
     }
 
-    if (liveSiteRef?.current) {
-      gsap.to(liveSiteRef.current, {
-        x: 0,
-        y: 0,
-        scale: 1,
-        rotateY: 0,
-        clipPath: 'inset(0% 0% 0% 0% round 0px)',
-        borderRadius: '0px',
-        borderWidth: '0px',
-        boxShadow: 'none',
-        opacity: 1,
-        duration: 0.3,
-        ease: 'power2.inOut',
-        onComplete: () => {
-          gsap.set(liveSiteRef.current, { clearProps: 'all' });
-        },
-      });
+    if (isMobile) {
+      if (liveSiteRef?.current) {
+        gsap.to(liveSiteRef.current, {
+          opacity: 1,
+          duration: 0.2,
+          ease: 'power2.out',
+          onComplete: () => {
+            gsap.set(liveSiteRef.current, { clearProps: 'all' });
+          },
+        });
+      }
+    } else {
+      if (liveSiteRef?.current) {
+        gsap.to(liveSiteRef.current, {
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotateY: 0,
+          borderRadius: '0px',
+          borderWidth: '0px',
+          boxShadow: 'none',
+          opacity: 1,
+          duration: 0.25,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            gsap.set(liveSiteRef.current, { clearProps: 'all' });
+          },
+        });
+      }
     }
 
     gsap.to(backdropRef.current, {
       opacity: 0,
-      duration: 0.3,
+      duration: 0.25,
       ease: 'power2.inOut',
       onComplete: () => {
         sessionStorage.setItem('grovix_intro_seen', 'true');
@@ -738,12 +766,51 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               </div>
             </div>
 
-            {/* CENTER PREVIEW CARD SPACER (Pre-dimensioned so it never expands from 0px) */}
+            {/* CENTER HARDWARE-ACCELERATED MOBILE PREVIEW CARD */}
             <div
-              ref={centerAnchorRef}
-              className="w-[78vw] max-w-[310px] aspect-[16/10] my-2.5 rounded-xl shrink-0"
-              style={{ perspective: '1000px' }}
-            />
+              ref={mobileCardRef}
+              className="gsap-mobile-preview-card w-[82vw] max-w-[320px] aspect-[16/10] my-2.5 rounded-2xl bg-gradient-to-br from-[#181D26] via-[#11141B] to-[#0A0D12] border border-white/20 p-3.5 sm:p-4 flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(47,79,210,0.3)] relative overflow-hidden select-none"
+              style={{ transformStyle: 'preserve-3d', willChange: 'transform, opacity' }}
+            >
+              {/* Subtle tech ambient glow */}
+              <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-[#2F4FD2]/25 blur-2xl pointer-events-none" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,102,245,0.18)_0%,transparent_65%)] pointer-events-none" />
+
+              {/* Top Bar: OS Badge & Status */}
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#3B66F5] animate-ping" />
+                  <span className="font-mono text-[9px] font-bold tracking-widest text-slate-300 uppercase">
+                    GROVIX &bull; OS
+                  </span>
+                </div>
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#2F4FD2]/20 border border-[#2F4FD2]/40 text-[#82A2FF] font-mono text-[8px] font-bold tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  ONLINE
+                </div>
+              </div>
+
+              {/* Middle: Monogram & Label */}
+              <div className="relative z-10 flex items-center gap-3 my-auto">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2F4FD2] to-[#12151B] border border-white/25 flex items-center justify-center shadow-[0_4px_16px_rgba(47,79,210,0.6)] shrink-0">
+                  <span className="font-heading font-black text-white text-lg tracking-tight">G</span>
+                </div>
+                <div>
+                  <div className="text-white font-heading font-extrabold text-xs sm:text-sm tracking-tight leading-tight">
+                    Business Automation
+                  </div>
+                  <div className="text-slate-400 font-mono text-[9px] tracking-wide mt-0.5">
+                    Custom ERP &bull; AI Workflows
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom: Telemetry Bar */}
+              <div className="relative z-10 flex items-center justify-between pt-2 border-t border-white/10 font-mono text-[8px] text-slate-400">
+                <span>LATENCY &lt; 15MS</span>
+                <span className="text-[#3B66F5] font-semibold">ALL SYSTEMS GO</span>
+              </div>
+            </div>
 
             {/* BOTTOM HEADING: GROVIX (Individual letters with multi-directional animations) */}
             <div className="gsap-mobile-bottom-block w-full flex justify-center items-center text-center mt-0.5">

@@ -11,13 +11,18 @@ gsap.registerPlugin(ScrollTrigger);
  */
 const SiteAnimations = () => {
   useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+
     // Small delay so all components mount first
     const initTimer = setTimeout(() => {
-      initHeadingReveal();
+      initHeadingReveal(isMobile);
       initCounters();
-      initSpotlight();
-      initMagneticButtons();
-    }, 700);
+      if (!isMobile && !isTouch) {
+        initSpotlight();
+        initMagneticButtons();
+      }
+    }, 500);
 
     return () => {
       clearTimeout(initTimer);
@@ -28,16 +33,35 @@ const SiteAnimations = () => {
 };
 
 /* ─────────────────────────────────────────────
-   1. SECTION HEADING SPLIT REVEAL
-   All h2 elements animate word by word via
-   clip-path / yPercent on scroll
+   1. SECTION HEADING REVEAL
+   Clean, hardware-accelerated reveal on scroll
 ───────────────────────────────────────────── */
-function initHeadingReveal() {
+function initHeadingReveal(isMobile) {
   const headings = document.querySelectorAll('h2:not([data-no-reveal])');
 
   headings.forEach((h2) => {
     if (h2.dataset.revealDone) return;
     h2.dataset.revealDone = 'true';
+
+    if (isMobile) {
+      // On mobile phones: direct hardware-accelerated transform without tearing down DOM into spans
+      gsap.fromTo(
+        h2,
+        { y: 22, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.65,
+          ease: 'power3.out',
+          scrollTrigger: {
+            trigger: h2,
+            start: 'top 90%',
+            toggleActions: 'play none none none',
+          },
+        }
+      );
+      return;
+    }
 
     const html = h2.innerHTML;
     const words = html.split(/(\s+)/);

@@ -28,7 +28,8 @@
 .gsap-letter-we,
 .gsap-letter-build,
 .gsap-letter-grovix,
-.gsap-tagline-word {
+.gsap-tagline-word,
+.gsap-mobile-preview-card {
   opacity: 0;
   will-change: transform, opacity;
 }
@@ -297,3 +298,19 @@ a:focus-visible, button:focus-visible {
 .marquee-track {
   will-change: transform;
 }
+
+/* Mobile & Low-End Device Ultra-Smooth Rendering */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  .grain-overlay {
+    display: none !important;
+  }
+  /* Hardware accelerate animated sections on mobile */
+  .live-site-wrapper {
+    -webkit-overflow-scrolling: touch;
+    transform: translateZ(0);
+  }
+}
+

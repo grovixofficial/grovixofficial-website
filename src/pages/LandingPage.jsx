@@ -108,8 +108,8 @@ const LandingPage = () => {
         Skip to main content
       </a>
 
-      {/* Subtle Tactile Film Grain Texture */}
-      <div className="fixed inset-0 pointer-events-none grain-overlay z-40 opacity-40 mix-blend-multiply" />
+      {/* Subtle Tactile Film Grain Texture (Desktop only to guarantee 120fps/60fps on phones) */}
+      <div className="fixed inset-0 pointer-events-none grain-overlay z-40 opacity-40 mix-blend-multiply hidden md:block" />
 
       {/* Live Website Content (Directly animated from small frame to full screen during intro) */}
       <div ref={liveSiteRef} className="live-site-wrapper w-full relative">
