@@ -87,7 +87,7 @@ const GrovixIntro = ({ cardFrameRef, liveSiteRef, onComplete }) => {
       if (isMobileView) {
         // Mobile dimensions (Sadu Media reference: neat compact landscape card strictly framed between WE BUILD and GROVIX)
         anchorW = Math.min(screenW * 0.74, 270);
-        anchorH = 165;
+        anchorH = 155;
 
         if (centerAnchorRef.current) {
           centerAnchorRef.current.style.width = `${anchorW}px`;
@@ -759,12 +759,6 @@ const GrovixIntro = ({ cardFrameRef, liveSiteRef, onComplete }) => {
           className="absolute -top-[250px] -left-[250px] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(47,79,210,0.18)_0%,rgba(59,102,245,0.06)_50%,transparent_70%)] blur-[50px] pointer-events-none will-change-transform"
         />
       </div>
-
-
-
-
-
-
       {/* Kinetic Typography Layer (starts with opacity: 0 in style to eliminate any FOUC / flash of text before JS initializes) */}
       <aside
         ref={introLayerRef}
@@ -846,7 +840,7 @@ const GrovixIntro = ({ cardFrameRef, liveSiteRef, onComplete }) => {
             {/* CENTER PREVIEW CARD SPACER (Live website is positioned exactly here and flips!) */}
             <div
               ref={centerAnchorRef}
-              className="w-[74vw] max-w-[270px] h-[165px] my-2.5 rounded-2xl shrink-0"
+              className="w-[74vw] max-w-[270px] h-[155px] my-4 rounded-2xl shrink-0"
               style={{ perspective: '1000px' }}
             />
 
