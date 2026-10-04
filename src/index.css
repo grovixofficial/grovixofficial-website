@@ -1,0 +1,299 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-navy: #111418;
+  --brand-dark: #0D1117;
+  --brand-blue: #2F4FD2;
+  --brand-blue-light: #EEF2FF;
+  --brand-blue-dark: #233FA8;
+  --brand-paper: #F5F4EF;
+  --brand-paper-light: #FAF9F6;
+  --brand-taupe: #A49C8D;
+  --brand-taupe-dark: #6D6B5F;
+  --brand-mint: #2F4FD2;
+  --brand-mint-light: #EEF2FF;
+  --brand-mint-dark: #233FA8;
+  --brand-cyan: #3B66F5;
+  --brand-cyan-light: #F0F4FF;
+  --brand-slate: #6D6B5F;
+  --brand-bg: #F5F4EF;
+  --text-primary: #111418;
+  --text-secondary: #4A4840;
+}
+
+/* Zero FOUC & Anti-Jerk protection: Intro letters & words start hidden by default */
+.gsap-kicker-word,
+.gsap-letter-we,
+.gsap-letter-build,
+.gsap-letter-grovix,
+.gsap-tagline-word {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+/* Subtle Tech Glow Utilities (using brand royal cobalt blue) */
+.glow-mint, .glow-blue {
+  box-shadow: 0 0 24px rgba(47, 79, 210, 0.25);
+}
+
+.glow-cyan {
+  box-shadow: 0 0 24px rgba(59, 102, 245, 0.25);
+}
+
+::selection {
+  background-color: #EEF2FF;
+  color: #2F4FD2;
+}
+
+/* ==========================================================================
+   Custom Architectural Scrollbar (Grovix Design System)
+   ========================================================================== */
+
+/* Modern standard scrollbar (Firefox & standard compliant engines) */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #1C2026 #ECE7DC;
+  scroll-behavior: initial; /* Lenis handles smooth scrolling */
+}
+
+/* WebKit-based browsers (Chrome, Edge, Safari, Opera) */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #ECE7DC;
+  border-left: 1px solid rgba(17, 20, 24, 0.12);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #1C2026; /* Deep obsidian brand color for clear, sharp contrast */
+  border-radius: 9999px;
+  border: 2px solid #ECE7DC;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #2F4FD2; /* Vibrant cobalt electric blue on hover */
+  border-color: #ECE7DC;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: #1E389B;
+}
+
+::-webkit-scrollbar-corner {
+  background: #ECE7DC;
+}
+
+
+/* Dark containers / Dark mode custom scrollbars */
+.scrollbar-dark,
+.grovix-dark-scroll,
+.dark ::-webkit-scrollbar-track {
+  background: #111418;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.scrollbar-dark,
+.grovix-dark-scroll,
+.dark ::-webkit-scrollbar-thumb {
+  background-color: #2C323D;
+  border: 2px solid #111418;
+}
+
+.scrollbar-dark:hover,
+.grovix-dark-scroll:hover,
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: #2F4FD2;
+}
+
+/* Utility to hide scrollbars while preserving scroll functionality */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+
+body {
+  background-color: #F5F4EF;
+  color: #111418;
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hyper-Expressive Custom Cursor: Hide default OS pointer on desktop devices when active */
+@media (hover: hover) and (pointer: fine) {
+  html.has-custom-cursor,
+  html.has-custom-cursor *,
+  html.has-custom-cursor a,
+  html.has-custom-cursor button,
+  html.has-custom-cursor [role="button"],
+  html.has-custom-cursor input[type="submit"],
+  html.has-custom-cursor input[type="button"] {
+    cursor: none !important;
+  }
+}
+
+h1, h2, h3, h4, .font-heading {
+  font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  text-wrap: balance;
+  letter-spacing: -0.028em;
+}
+
+p, .font-body {
+  text-wrap: pretty;
+}
+
+.tabular-nums, .font-mono {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Grovix Architectural Grid */
+.grovix-grid-bg {
+  background-image: 
+    linear-gradient(to right, rgba(17, 20, 24, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17, 20, 24, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.grovix-grid-dark {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Subtle Film Grain Overlay for tactile depth */
+.grain-overlay {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.02'/%3E%3C/svg%3E");
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(229, 225, 216, 0.9);
+  box-shadow: 0 4px 20px -2px rgba(17, 20, 24, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.glass-card-dark {
+  background: rgba(17, 20, 24, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(13, 17, 23, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.soft-shadow {
+  box-shadow: 0 2px 8px -1px rgba(17, 20, 24, 0.03), 0 1px 3px -1px rgba(17, 20, 24, 0.02);
+}
+
+.hover-card-elevate {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+
+.hover-card-elevate:hover {
+  transform: translateY(-3px);
+  border-color: rgba(47, 79, 210, 0.3);
+  box-shadow: 0 16px 32px -8px rgba(17, 20, 24, 0.08), 0 0 0 1px rgba(47, 79, 210, 0.15);
+}
+
+/* Skip to content link for accessibility */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1.5rem;
+  background: #111418;
+  color: #FFFFFF;
+  padding: 0.75rem 1.25rem;
+  z-index: 100;
+  font-weight: 600;
+  border-radius: 0.375rem;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 1.5rem;
+}
+
+/* Button smooth hover glow */
+.btn-primary {
+  background-color: #111418;
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary:hover {
+  background-color: #000000;
+  box-shadow: 0 8px 24px -4px rgba(17, 20, 24, 0.25), 0 0 0 2px rgba(47, 79, 210, 0.4);
+  transform: translateY(-1px);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-accent {
+  background-color: #2F4FD2;
+  color: #FFFFFF;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-accent:hover {
+  background-color: #233FA8;
+  box-shadow: 0 8px 24px -4px rgba(47, 79, 210, 0.35);
+  transform: translateY(-1px);
+}
+
+.btn-accent:active {
+  transform: scale(0.98);
+}
+
+/* Mask edges for smooth marquees */
+.mask-marquee-edges {
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+
+/* Accessible focus ring */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid #2F4FD2;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Explicitly pause decorative marquee scrollers for reduced-motion users */
+  .animate-marquee,
+  .animate-tech-row1,
+  .animate-tech-row2 {
+    animation-play-state: paused !important;
+  }
+}
+
+/* Marquee containers are continuously transformed — hint the browser
+   to promote them to a composited layer for smoother rendering. */
+.marquee-track {
+  will-change: transform;
+}
