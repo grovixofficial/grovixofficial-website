@@ -22,6 +22,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
   const backdropRef = useRef(null);
   const introLayerRef = useRef(null);
   const centerAnchorRef = useRef(null);
+  const cardBorderRef = useRef(null);
   const skipRef = useRef(null);
   const tlRef = useRef(null);
 
@@ -50,7 +51,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
     if (hasSeen && !SHOW_INTRO_ALWAYS) {
       setShouldRender(false);
       if (liveSiteRef?.current) {
-        gsap.set(liveSiteRef.current, { clearProps: 'all' });
+        gsap.set(liveSiteRef.current, { clearProps: 'all', clipPath: 'none', WebkitClipPath: 'none' });
       }
       if (onComplete) onComplete();
       return;
@@ -62,7 +63,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       sessionStorage.setItem('grovix_intro_seen', 'true');
       setShouldRender(false);
       if (liveSiteRef?.current) {
-        gsap.set(liveSiteRef.current, { clearProps: 'all' });
+        gsap.set(liveSiteRef.current, { clearProps: 'all', clipPath: 'none', WebkitClipPath: 'none' });
       }
       if (onComplete) onComplete();
       return;
@@ -79,11 +80,9 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       let anchorW, anchorH, targetScale, targetX, targetY;
 
       if (isMobileView) {
-        // Mobile dimensions (Proportional to phone display, perfectly centered)
-        anchorW = Math.min(screenW * 0.74, 290);
-        const idealH = anchorW * (screenH / screenW);
-        const maxH = Math.min(screenH * 0.32, 210);
-        anchorH = Math.min(idealH, maxH);
+        // Mobile dimensions (Sadu Media reference: neat compact landscape card strictly framed between WE BUILD and GROVIX)
+        anchorW = Math.min(screenW * 0.74, 270);
+        anchorH = 165;
 
         if (centerAnchorRef.current) {
           centerAnchorRef.current.style.width = `${anchorW}px`;
@@ -91,12 +90,16 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         }
 
         targetScale = anchorW / screenW;
+        const visibleUnscaledH = anchorH / targetScale;
+        const clipBottomPercent = Math.max(0, ((screenH - visibleUnscaledH) / screenH) * 100);
+        const cardCenterUnscaledY = visibleUnscaledH / 2;
+
         const rect = centerAnchorRef.current.getBoundingClientRect();
         const anchorCenterX = rect.left + rect.width / 2;
         const anchorCenterY = rect.top + rect.height / 2;
 
         targetX = anchorCenterX - screenW / 2;
-        targetY = anchorCenterY - screenH / 2;
+        targetY = anchorCenterY - cardCenterUnscaledY;
 
         if (liveSiteRef?.current) {
           gsap.set(liveSiteRef.current, {
@@ -107,7 +110,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             height: '100vh',
             overflow: 'hidden',
             zIndex: 90,
-            transformOrigin: 'center center',
+            transformOrigin: `50% ${cardCenterUnscaledY.toFixed(1)}px`,
             x: targetX,
             y: targetY,
             scale: targetScale * 0.75,
@@ -115,10 +118,36 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             transformPerspective: 1000,
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
+            clipPath: `inset(0% 0% ${clipBottomPercent.toFixed(2)}% 0% round 16px)`,
+            WebkitClipPath: `inset(0% 0% ${clipBottomPercent.toFixed(2)}% 0% round 16px)`,
+            borderRadius: '16px',
+            pointerEvents: 'none',
+            opacity: 0,
+            willChange: 'transform, opacity',
+          });
+        }
+
+        if (cardBorderRef.current) {
+          gsap.set(cardBorderRef.current, {
+            display: 'block',
+            position: 'fixed',
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            height: rect.height,
+            x: 0,
+            y: 0,
+            scale: 0.75,
+            rotateY: -180,
+            transformPerspective: 1000,
+            transformOrigin: '50% 50%',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
             borderRadius: '16px',
             border: '1.5px solid rgba(255,255,255,0.4)',
             boxShadow: '0 16px 45px rgba(0,0,0,0.9), 0 0 25px rgba(47,79,210,0.3)',
             pointerEvents: 'none',
+            zIndex: 95,
             opacity: 0,
             willChange: 'transform, opacity',
           });
@@ -158,6 +187,8 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             transformPerspective: 1000,
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
+            clipPath: 'inset(0% 0% 0% 0% round 16px)',
+            WebkitClipPath: 'inset(0% 0% 0% 0% round 16px)',
             borderRadius: '16px',
             border: '2px solid rgba(255,255,255,0.35)',
             boxShadow: '0 25px 60px rgba(0,0,0,0.95), 0 0 40px rgba(47,79,210,0.25)',
@@ -165,6 +196,10 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             opacity: 0,
             willChange: 'transform, opacity',
           });
+        }
+
+        if (cardBorderRef.current) {
+          gsap.set(cardBorderRef.current, { display: 'none' });
         }
       }
 
@@ -277,6 +312,8 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               overflow: 'visible',
               zIndex: 'auto',
               transform: 'none',
+              clipPath: 'none',
+              WebkitClipPath: 'none',
               borderRadius: '0px',
               borderWidth: '0px',
               boxShadow: 'none',
@@ -284,12 +321,18 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               willChange: 'auto',
             });
           }
+          if (cardBorderRef.current) {
+            cardBorderRef.current.style.display = 'none';
+          }
           setShouldRender(false);
           if (onComplete) onComplete();
         },
       });
 
       tlRef.current = tl;
+      if (typeof window !== 'undefined') {
+        window.__introTl = tl;
+      }
 
       // 1. Skip button reveals smoothly
       tl.to(skipRef.current, {
@@ -417,6 +460,20 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             ease: 'back.out(1.3)',
           },
           isMobileView ? '-=0.4' : '-=0.55'
+        );
+      }
+
+      if (isMobileView && cardBorderRef.current) {
+        tl.to(
+          cardBorderRef.current,
+          {
+            rotateY: 0,
+            opacity: 1,
+            scale: 1,
+            duration: 0.72,
+            ease: 'back.out(1.3)',
+          },
+          '<'
         );
       }
 
@@ -590,6 +647,8 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
           y: 0,
           scale: 1,
           rotateY: 0,
+          clipPath: 'inset(0% 0% 0% 0% round 0px)',
+          WebkitClipPath: 'inset(0% 0% 0% 0% round 0px)',
           borderRadius: '0px',
           borderWidth: '0px',
           boxShadow: 'none',
@@ -597,6 +656,25 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
           ease: 'expo.inOut',
         };
         tl.to(liveSiteRef.current, expandVars, '-=0.35');
+      }
+
+      if (isMobileView && cardBorderRef.current) {
+        tl.to(
+          cardBorderRef.current,
+          {
+            top: 0,
+            left: 0,
+            width: screenW,
+            height: screenH,
+            borderRadius: '0px',
+            borderWidth: '0px',
+            boxShadow: 'none',
+            opacity: 0,
+            duration: 0.78,
+            ease: 'expo.inOut',
+          },
+          '<'
+        );
       }
 
       // Backdrop fades away revealing real site
@@ -629,6 +707,8 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         y: 0,
         scale: 1,
         rotateY: 0,
+        clipPath: 'inset(0% 0% 0% 0% round 0px)',
+        WebkitClipPath: 'inset(0% 0% 0% 0% round 0px)',
         borderRadius: '0px',
         borderWidth: '0px',
         boxShadow: 'none',
@@ -646,10 +726,23 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               overflow: 'visible',
               zIndex: 'auto',
               transform: 'none',
+              clipPath: 'none',
+              WebkitClipPath: 'none',
               pointerEvents: 'auto',
               willChange: 'auto',
             });
           }
+        },
+      });
+    }
+
+    if (cardBorderRef.current) {
+      gsap.to(cardBorderRef.current, {
+        opacity: 0,
+        duration: 0.2,
+        ease: 'power2.out',
+        onComplete: () => {
+          if (cardBorderRef.current) cardBorderRef.current.style.display = 'none';
         },
       });
     }
@@ -685,6 +778,18 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
 
 
 
+
+      {/* Mobile Synced Card Border Frame */}
+      <div
+        ref={cardBorderRef}
+        className="fixed pointer-events-none rounded-2xl border-[1.5px] border-white/40 shadow-[0_16px_45px_rgba(0,0,0,0.9),0_0_25px_rgba(47,79,210,0.3)] z-[95] will-change-transform"
+        style={{
+          display: 'none',
+          transformPerspective: 1000,
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+        }}
+      />
 
       {/* Kinetic Typography Layer (starts with opacity: 0 in style to eliminate any FOUC / flash of text before JS initializes) */}
       <aside
@@ -767,7 +872,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             {/* CENTER PREVIEW CARD SPACER (Live website is positioned exactly here and flips!) */}
             <div
               ref={centerAnchorRef}
-              className="my-2.5 rounded-xl shrink-0"
+              className="w-[74vw] max-w-[270px] h-[165px] my-2.5 rounded-2xl shrink-0"
               style={{ perspective: '1000px' }}
             />
 
