@@ -22,7 +22,6 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
   const backdropRef = useRef(null);
   const introLayerRef = useRef(null);
   const centerAnchorRef = useRef(null);
-  const mobileCardRef = useRef(null);
   const skipRef = useRef(null);
   const tlRef = useRef(null);
 
@@ -76,26 +75,52 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       const screenH = window.innerHeight;
       const isMobileView = screenW < 768;
 
-      // 1. DYNAMIC ANCHOR SIZING & PLACEMENT
+      // 1. DYNAMIC ANCHOR SIZING & PLACEMENT (Live Website inside the card)
       let anchorW, anchorH, targetScale, targetX, targetY;
 
       if (isMobileView) {
-        // MOBILE ULTRA-PERFORMANCE ARCHITECTURE:
-        // Never 3D-transform, scale, or clip the massive 15,000px live DOM tree on mobile phones.
-        // Keep liveSite sitting normal and hidden until reveal, ensuring 60-120fps on any phone.
-        if (liveSiteRef?.current) {
-          gsap.set(liveSiteRef.current, {
-            opacity: 0,
-            pointerEvents: 'none',
-          });
+        // Mobile dimensions (Proportional to phone display, perfectly centered)
+        anchorW = Math.min(screenW * 0.74, 290);
+        const idealH = anchorW * (screenH / screenW);
+        const maxH = Math.min(screenH * 0.32, 210);
+        anchorH = Math.min(idealH, maxH);
+
+        if (centerAnchorRef.current) {
+          centerAnchorRef.current.style.width = `${anchorW}px`;
+          centerAnchorRef.current.style.height = `${anchorH}px`;
         }
 
-        if (mobileCardRef.current) {
-          gsap.set(mobileCardRef.current, {
+        targetScale = anchorW / screenW;
+        const rect = centerAnchorRef.current.getBoundingClientRect();
+        const anchorCenterX = rect.left + rect.width / 2;
+        const anchorCenterY = rect.top + rect.height / 2;
+
+        targetX = anchorCenterX - screenW / 2;
+        targetY = anchorCenterY - screenH / 2;
+
+        if (liveSiteRef?.current) {
+          gsap.set(liveSiteRef.current, {
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            overflow: 'hidden',
+            zIndex: 90,
+            transformOrigin: 'center center',
+            x: targetX,
+            y: targetY,
+            scale: targetScale * 0.75,
             rotateY: -180,
+            transformPerspective: 1000,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            borderRadius: '16px',
+            border: '1.5px solid rgba(255,255,255,0.4)',
+            boxShadow: '0 16px 45px rgba(0,0,0,0.9), 0 0 25px rgba(47,79,210,0.3)',
+            pointerEvents: 'none',
             opacity: 0,
-            scale: 0.82,
-            transformPerspective: 800,
+            willChange: 'transform, opacity',
           });
         }
       } else {
@@ -131,11 +156,14 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
             scale: targetScale * 0.7,
             rotateY: -180,
             transformPerspective: 1000,
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
             borderRadius: '16px',
             border: '2px solid rgba(255,255,255,0.35)',
             boxShadow: '0 25px 60px rgba(0,0,0,0.95), 0 0 40px rgba(47,79,210,0.25)',
             pointerEvents: 'none',
             opacity: 0,
+            willChange: 'transform, opacity',
           });
         }
       }
@@ -240,7 +268,21 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         onComplete: () => {
           sessionStorage.setItem('grovix_intro_seen', 'true');
           if (liveSiteRef?.current) {
-            gsap.set(liveSiteRef.current, { clearProps: 'all' });
+            gsap.set(liveSiteRef.current, {
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              width: '100%',
+              height: 'auto',
+              overflow: 'visible',
+              zIndex: 'auto',
+              transform: 'none',
+              borderRadius: '0px',
+              borderWidth: '0px',
+              boxShadow: 'none',
+              pointerEvents: 'auto',
+              willChange: 'auto',
+            });
           }
           setShouldRender(false);
           if (onComplete) onComplete();
@@ -363,32 +405,18 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         '-=0.2'
       );
 
-      // 4. Center Preview Card / Live Site 3D Flip
-      if (isMobileView) {
-        if (mobileCardRef.current) {
-          tl.to(
-            mobileCardRef.current,
-            {
-              rotateY: 0,
-              opacity: 1,
-              scale: 1,
-              duration: 0.55,
-              ease: 'back.out(1.4)',
-            },
-            '-=0.35'
-          );
-        }
-      } else if (liveSiteRef?.current) {
+      // 4. Center Live Website CARD 3D FLIP!
+      if (liveSiteRef?.current) {
         tl.to(
           liveSiteRef.current,
           {
-            rotateY: 0, // 3D Card Flip from -180 to 0
+            rotateY: 0, // 3D Card Flip to reveal the real live website inside the card!
             opacity: 1,
             scale: targetScale,
-            duration: 0.85,
+            duration: isMobileView ? 0.72 : 0.85,
             ease: 'back.out(1.3)',
           },
-          '-=0.55'
+          isMobileView ? '-=0.4' : '-=0.55'
         );
       }
 
@@ -450,28 +478,18 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         tl.to(
           ['.gsap-kicker-word', '.gsap-mobile-top-block'],
           {
-            y: -35,
+            y: -40,
             opacity: 0,
-            duration: 0.3,
+            duration: 0.35,
             ease: 'power2.in',
           }
         )
         .to(
-          mobileCardRef.current,
-          {
-            scale: 1.05,
-            opacity: 0,
-            duration: 0.28,
-            ease: 'power2.in',
-          },
-          '<'
-        )
-        .to(
           ['.gsap-mobile-bottom-block', '.gsap-tagline-word'],
           {
-            y: 35,
+            y: 40,
             opacity: 0,
-            duration: 0.3,
+            duration: 0.35,
             ease: 'power2.in',
           },
           '<'
@@ -536,7 +554,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         '-=0.35'
       );
 
-      // 10. Live website frame reveal!
+      // 10. Live website frame seamlessly expands from center window to full screen!
       isIntroActive.current = false;
       if (tiltWrapperRef.current) {
         tl.to(
@@ -565,40 +583,20 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         );
       }
 
-      if (isMobileView) {
-        // MOBILE: Seamlessly fade-in live site with zero DOM recalculation or layout jerk
-        if (liveSiteRef?.current) {
-          tl.to(
-            liveSiteRef.current,
-            {
-              opacity: 1,
-              duration: 0.4,
-              ease: 'power2.out',
-              onComplete: () => {
-                if (liveSiteRef?.current) {
-                  gsap.set(liveSiteRef.current, { clearProps: 'all' });
-                }
-              },
-            },
-            '-=0.2'
-          );
-        }
-      } else {
-        // DESKTOP: Expand from center window to full screen
-        if (liveSiteRef?.current) {
-          let expandVars = {
-            x: 0,
-            y: 0,
-            scale: 1,
-            rotateY: 0,
-            borderRadius: '0px',
-            borderWidth: '0px',
-            boxShadow: 'none',
-            duration: 0.85,
-            ease: 'expo.inOut',
-          };
-          tl.to(liveSiteRef.current, expandVars, '-=0.35');
-        }
+      // Seamless expansion of live website card to full screen
+      if (liveSiteRef?.current) {
+        let expandVars = {
+          x: 0,
+          y: 0,
+          scale: 1,
+          rotateY: 0,
+          borderRadius: '0px',
+          borderWidth: '0px',
+          boxShadow: 'none',
+          duration: isMobileView ? 0.78 : 0.9,
+          ease: 'expo.inOut',
+        };
+        tl.to(liveSiteRef.current, expandVars, '-=0.35');
       }
 
       // Backdrop fades away revealing real site
@@ -625,35 +623,35 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       gsap.set(counterBoxRef.current, { opacity: 0 });
     }
 
-    if (isMobile) {
-      if (liveSiteRef?.current) {
-        gsap.to(liveSiteRef.current, {
-          opacity: 1,
-          duration: 0.2,
-          ease: 'power2.out',
-          onComplete: () => {
-            gsap.set(liveSiteRef.current, { clearProps: 'all' });
-          },
-        });
-      }
-    } else {
-      if (liveSiteRef?.current) {
-        gsap.to(liveSiteRef.current, {
-          x: 0,
-          y: 0,
-          scale: 1,
-          rotateY: 0,
-          borderRadius: '0px',
-          borderWidth: '0px',
-          boxShadow: 'none',
-          opacity: 1,
-          duration: 0.25,
-          ease: 'power2.inOut',
-          onComplete: () => {
-            gsap.set(liveSiteRef.current, { clearProps: 'all' });
-          },
-        });
-      }
+    if (liveSiteRef?.current) {
+      gsap.to(liveSiteRef.current, {
+        x: 0,
+        y: 0,
+        scale: 1,
+        rotateY: 0,
+        borderRadius: '0px',
+        borderWidth: '0px',
+        boxShadow: 'none',
+        opacity: 1,
+        duration: 0.25,
+        ease: 'power2.inOut',
+        onComplete: () => {
+          if (liveSiteRef?.current) {
+            gsap.set(liveSiteRef.current, {
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              width: '100%',
+              height: 'auto',
+              overflow: 'visible',
+              zIndex: 'auto',
+              transform: 'none',
+              pointerEvents: 'auto',
+              willChange: 'auto',
+            });
+          }
+        },
+      });
     }
 
     gsap.to(backdropRef.current, {
@@ -766,51 +764,12 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               </div>
             </div>
 
-            {/* CENTER HARDWARE-ACCELERATED MOBILE PREVIEW CARD */}
+            {/* CENTER PREVIEW CARD SPACER (Live website is positioned exactly here and flips!) */}
             <div
-              ref={mobileCardRef}
-              className="gsap-mobile-preview-card w-[82vw] max-w-[320px] aspect-[16/10] my-2.5 rounded-2xl bg-gradient-to-br from-[#181D26] via-[#11141B] to-[#0A0D12] border border-white/20 p-3.5 sm:p-4 flex flex-col justify-between shadow-[0_16px_40px_rgba(0,0,0,0.85),0_0_25px_rgba(47,79,210,0.3)] relative overflow-hidden select-none"
-              style={{ transformStyle: 'preserve-3d', willChange: 'transform, opacity' }}
-            >
-              {/* Subtle tech ambient glow */}
-              <div className="absolute -top-10 -right-10 w-28 h-28 rounded-full bg-[#2F4FD2]/25 blur-2xl pointer-events-none" />
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(59,102,245,0.18)_0%,transparent_65%)] pointer-events-none" />
-
-              {/* Top Bar: OS Badge & Status */}
-              <div className="relative z-10 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-[#3B66F5] animate-ping" />
-                  <span className="font-mono text-[9px] font-bold tracking-widest text-slate-300 uppercase">
-                    GROVIX &bull; OS
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#2F4FD2]/20 border border-[#2F4FD2]/40 text-[#82A2FF] font-mono text-[8px] font-bold tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                  ONLINE
-                </div>
-              </div>
-
-              {/* Middle: Monogram & Label */}
-              <div className="relative z-10 flex items-center gap-3 my-auto">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2F4FD2] to-[#12151B] border border-white/25 flex items-center justify-center shadow-[0_4px_16px_rgba(47,79,210,0.6)] shrink-0">
-                  <span className="font-heading font-black text-white text-lg tracking-tight">G</span>
-                </div>
-                <div>
-                  <div className="text-white font-heading font-extrabold text-xs sm:text-sm tracking-tight leading-tight">
-                    Business Automation
-                  </div>
-                  <div className="text-slate-400 font-mono text-[9px] tracking-wide mt-0.5">
-                    Custom ERP &bull; AI Workflows
-                  </div>
-                </div>
-              </div>
-
-              {/* Bottom: Telemetry Bar */}
-              <div className="relative z-10 flex items-center justify-between pt-2 border-t border-white/10 font-mono text-[8px] text-slate-400">
-                <span>LATENCY &lt; 15MS</span>
-                <span className="text-[#3B66F5] font-semibold">ALL SYSTEMS GO</span>
-              </div>
-            </div>
+              ref={centerAnchorRef}
+              className="my-2.5 rounded-xl shrink-0"
+              style={{ perspective: '1000px' }}
+            />
 
             {/* BOTTOM HEADING: GROVIX (Individual letters with multi-directional animations) */}
             <div className="gsap-mobile-bottom-block w-full flex justify-center items-center text-center mt-0.5">
