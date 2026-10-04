@@ -10,7 +10,7 @@ const buildLetters = ['B', 'U', 'I', 'L', 'D'];
 const grovixLetters = ['G', 'R', 'O', 'V', 'I', 'X'];
 const taglineWords = ['AUTOMATE', 'BETTER.', 'GROW', 'FASTER.'];
 
-const GrovixIntro = ({ liveSiteRef, onComplete }) => {
+const GrovixIntro = ({ cardFrameRef, liveSiteRef, onComplete }) => {
   const [shouldRender, setShouldRender] = useState(true);
   const [isMobile, setIsMobile] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -22,7 +22,6 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
   const backdropRef = useRef(null);
   const introLayerRef = useRef(null);
   const centerAnchorRef = useRef(null);
-  const cardBorderRef = useRef(null);
   const skipRef = useRef(null);
   const tlRef = useRef(null);
 
@@ -50,8 +49,11 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
     const hasSeen = sessionStorage.getItem('grovix_intro_seen');
     if (hasSeen && !SHOW_INTRO_ALWAYS) {
       setShouldRender(false);
+      if (cardFrameRef?.current) {
+        gsap.set(cardFrameRef.current, { clearProps: 'all' });
+      }
       if (liveSiteRef?.current) {
-        gsap.set(liveSiteRef.current, { clearProps: 'all', clipPath: 'none', WebkitClipPath: 'none' });
+        gsap.set(liveSiteRef.current, { clearProps: 'all' });
       }
       if (onComplete) onComplete();
       return;
@@ -62,8 +64,11 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
     if (prefersReducedMotion) {
       sessionStorage.setItem('grovix_intro_seen', 'true');
       setShouldRender(false);
+      if (cardFrameRef?.current) {
+        gsap.set(cardFrameRef.current, { clearProps: 'all' });
+      }
       if (liveSiteRef?.current) {
-        gsap.set(liveSiteRef.current, { clearProps: 'all', clipPath: 'none', WebkitClipPath: 'none' });
+        gsap.set(liveSiteRef.current, { clearProps: 'all' });
       }
       if (onComplete) onComplete();
       return;
@@ -77,7 +82,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       const isMobileView = screenW < 768;
 
       // 1. DYNAMIC ANCHOR SIZING & PLACEMENT (Live Website inside the card)
-      let anchorW, anchorH, targetScale, targetX, targetY;
+      let anchorW, anchorH, targetScale;
 
       if (isMobileView) {
         // Mobile dimensions (Sadu Media reference: neat compact landscape card strictly framed between WE BUILD and GROVIX)
@@ -90,66 +95,46 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         }
 
         targetScale = anchorW / screenW;
-        const visibleUnscaledH = anchorH / targetScale;
-        const clipBottomPercent = Math.max(0, ((screenH - visibleUnscaledH) / screenH) * 100);
-        const cardCenterUnscaledY = visibleUnscaledH / 2;
-
         const rect = centerAnchorRef.current.getBoundingClientRect();
-        const anchorCenterX = rect.left + rect.width / 2;
-        const anchorCenterY = rect.top + rect.height / 2;
 
-        targetX = anchorCenterX - screenW / 2;
-        targetY = anchorCenterY - cardCenterUnscaledY;
-
-        if (liveSiteRef?.current) {
-          gsap.set(liveSiteRef.current, {
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            overflow: 'hidden',
-            zIndex: 90,
-            transformOrigin: `50% ${cardCenterUnscaledY.toFixed(1)}px`,
-            x: targetX,
-            y: targetY,
-            scale: targetScale * 0.75,
-            rotateY: -180,
-            transformPerspective: 1000,
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            clipPath: `inset(0% 0% ${clipBottomPercent.toFixed(2)}% 0% round 16px)`,
-            WebkitClipPath: `inset(0% 0% ${clipBottomPercent.toFixed(2)}% 0% round 16px)`,
-            borderRadius: '16px',
-            pointerEvents: 'none',
-            opacity: 0,
-            willChange: 'transform, opacity',
-          });
-        }
-
-        if (cardBorderRef.current) {
-          gsap.set(cardBorderRef.current, {
-            display: 'block',
+        // 1. Card Frame Container: strictly clipped with overflow: hidden on the parent!
+        // 100% immune to Safari clip-path bugs because standard overflow: hidden is used!
+        if (cardFrameRef?.current) {
+          gsap.set(cardFrameRef.current, {
             position: 'fixed',
             top: rect.top,
             left: rect.left,
-            width: rect.width,
-            height: rect.height,
-            x: 0,
-            y: 0,
-            scale: 0.75,
-            rotateY: -180,
-            transformPerspective: 1000,
-            transformOrigin: '50% 50%',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
+            width: anchorW,
+            height: anchorH,
             borderRadius: '16px',
             border: '1.5px solid rgba(255,255,255,0.4)',
             boxShadow: '0 16px 45px rgba(0,0,0,0.9), 0 0 25px rgba(47,79,210,0.3)',
-            pointerEvents: 'none',
-            zIndex: 95,
+            overflow: 'hidden',
+            isolation: 'isolate',
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+            zIndex: 90,
+            transformPerspective: 1000,
+            transformOrigin: '50% 50%',
+            rotateY: -180,
+            scale: 0.75,
             opacity: 0,
-            willChange: 'transform, opacity',
+            pointerEvents: 'none',
+            willChange: 'transform, top, left, width, height, opacity',
+          });
+        }
+
+        // 2. Inner Live Website: full width, scaled down to match anchorW
+        if (liveSiteRef?.current) {
+          gsap.set(liveSiteRef.current, {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${screenW}px`,
+            height: `${screenH}px`,
+            transformOrigin: '0 0',
+            scale: targetScale,
+            pointerEvents: 'none',
+            willChange: 'transform',
           });
         }
       } else {
@@ -164,42 +149,43 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
 
         targetScale = anchorW / screenW;
         const rect = centerAnchorRef.current.getBoundingClientRect();
-        const anchorCenterX = rect.left + rect.width / 2;
-        const anchorCenterY = rect.top + rect.height / 2;
 
-        targetX = anchorCenterX - screenW / 2;
-        targetY = anchorCenterY - screenH / 2;
-
-        if (liveSiteRef?.current) {
-          gsap.set(liveSiteRef.current, {
+        if (cardFrameRef?.current) {
+          gsap.set(cardFrameRef.current, {
             position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            overflow: 'hidden',
-            zIndex: 90,
-            transformOrigin: 'center center',
-            x: targetX,
-            y: targetY,
-            scale: targetScale * 0.7,
-            rotateY: -180,
-            transformPerspective: 1000,
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            clipPath: 'inset(0% 0% 0% 0% round 16px)',
-            WebkitClipPath: 'inset(0% 0% 0% 0% round 16px)',
+            top: rect.top,
+            left: rect.left,
+            width: anchorW,
+            height: anchorH,
             borderRadius: '16px',
             border: '2px solid rgba(255,255,255,0.35)',
             boxShadow: '0 25px 60px rgba(0,0,0,0.95), 0 0 40px rgba(47,79,210,0.25)',
-            pointerEvents: 'none',
+            overflow: 'hidden',
+            isolation: 'isolate',
+            WebkitMaskImage: '-webkit-radial-gradient(white, black)',
+            zIndex: 90,
+            transformPerspective: 1000,
+            transformOrigin: '50% 50%',
+            rotateY: -180,
+            scale: 0.7,
             opacity: 0,
-            willChange: 'transform, opacity',
+            pointerEvents: 'none',
+            willChange: 'transform, top, left, width, height, opacity',
           });
         }
 
-        if (cardBorderRef.current) {
-          gsap.set(cardBorderRef.current, { display: 'none' });
+        if (liveSiteRef?.current) {
+          gsap.set(liveSiteRef.current, {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: `${screenW}px`,
+            height: `${screenH}px`,
+            transformOrigin: '0 0',
+            scale: targetScale,
+            pointerEvents: 'none',
+            willChange: 'transform',
+          });
         }
       }
 
@@ -302,6 +288,24 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       const tl = gsap.timeline({
         onComplete: () => {
           sessionStorage.setItem('grovix_intro_seen', 'true');
+          if (cardFrameRef?.current) {
+            gsap.set(cardFrameRef.current, {
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              width: '100%',
+              height: 'auto',
+              overflow: 'visible',
+              isolation: 'auto',
+              zIndex: 'auto',
+              transform: 'none',
+              borderRadius: '0px',
+              borderWidth: '0px',
+              boxShadow: 'none',
+              pointerEvents: 'auto',
+              willChange: 'auto',
+            });
+          }
           if (liveSiteRef?.current) {
             gsap.set(liveSiteRef.current, {
               position: 'relative',
@@ -310,19 +314,10 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               width: '100%',
               height: 'auto',
               overflow: 'visible',
-              zIndex: 'auto',
               transform: 'none',
-              clipPath: 'none',
-              WebkitClipPath: 'none',
-              borderRadius: '0px',
-              borderWidth: '0px',
-              boxShadow: 'none',
               pointerEvents: 'auto',
               willChange: 'auto',
             });
-          }
-          if (cardBorderRef.current) {
-            cardBorderRef.current.style.display = 'none';
           }
           setShouldRender(false);
           if (onComplete) onComplete();
@@ -449,31 +444,17 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       );
 
       // 4. Center Live Website CARD 3D FLIP!
-      if (liveSiteRef?.current) {
+      if (cardFrameRef?.current) {
         tl.to(
-          liveSiteRef.current,
+          cardFrameRef.current,
           {
             rotateY: 0, // 3D Card Flip to reveal the real live website inside the card!
             opacity: 1,
-            scale: targetScale,
+            scale: 1,
             duration: isMobileView ? 0.72 : 0.85,
             ease: 'back.out(1.3)',
           },
           isMobileView ? '-=0.4' : '-=0.55'
-        );
-      }
-
-      if (isMobileView && cardBorderRef.current) {
-        tl.to(
-          cardBorderRef.current,
-          {
-            rotateY: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 0.72,
-            ease: 'back.out(1.3)',
-          },
-          '<'
         );
       }
 
@@ -640,37 +621,31 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
         );
       }
 
-      // Seamless expansion of live website card to full screen
-      if (liveSiteRef?.current) {
-        let expandVars = {
-          x: 0,
-          y: 0,
-          scale: 1,
-          rotateY: 0,
-          clipPath: 'inset(0% 0% 0% 0% round 0px)',
-          WebkitClipPath: 'inset(0% 0% 0% 0% round 0px)',
-          borderRadius: '0px',
-          borderWidth: '0px',
-          boxShadow: 'none',
-          duration: isMobileView ? 0.78 : 0.9,
-          ease: 'expo.inOut',
-        };
-        tl.to(liveSiteRef.current, expandVars, '-=0.35');
-      }
-
-      if (isMobileView && cardBorderRef.current) {
+      // Seamless expansion of card frame to full screen
+      if (cardFrameRef?.current) {
         tl.to(
-          cardBorderRef.current,
+          cardFrameRef.current,
           {
             top: 0,
             left: 0,
-            width: screenW,
-            height: screenH,
+            width: '100vw',
+            height: '100vh',
             borderRadius: '0px',
             borderWidth: '0px',
             boxShadow: 'none',
-            opacity: 0,
-            duration: 0.78,
+            duration: isMobileView ? 0.78 : 0.9,
+            ease: 'expo.inOut',
+          },
+          '-=0.35'
+        );
+      }
+
+      if (liveSiteRef?.current) {
+        tl.to(
+          liveSiteRef.current,
+          {
+            scale: 1,
+            duration: isMobileView ? 0.78 : 0.9,
             ease: 'expo.inOut',
           },
           '<'
@@ -690,7 +665,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
     });
 
     return () => ctx.revert();
-  }, [liveSiteRef, onComplete, isMobile]);
+  }, [cardFrameRef, liveSiteRef, onComplete, isMobile]);
 
   // Skip Handler
   const handleSkip = () => {
@@ -701,21 +676,44 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
       gsap.set(counterBoxRef.current, { opacity: 0 });
     }
 
-    if (liveSiteRef?.current) {
-      gsap.to(liveSiteRef.current, {
-        x: 0,
-        y: 0,
-        scale: 1,
+    if (cardFrameRef?.current && liveSiteRef?.current) {
+      gsap.to(cardFrameRef.current, {
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
         rotateY: 0,
-        clipPath: 'inset(0% 0% 0% 0% round 0px)',
-        WebkitClipPath: 'inset(0% 0% 0% 0% round 0px)',
         borderRadius: '0px',
         borderWidth: '0px',
         boxShadow: 'none',
         opacity: 1,
         duration: 0.25,
         ease: 'power2.inOut',
+      });
+
+      gsap.to(liveSiteRef.current, {
+        scale: 1,
+        duration: 0.25,
+        ease: 'power2.inOut',
         onComplete: () => {
+          if (cardFrameRef?.current) {
+            gsap.set(cardFrameRef.current, {
+              position: 'relative',
+              top: 'auto',
+              left: 'auto',
+              width: '100%',
+              height: 'auto',
+              overflow: 'visible',
+              isolation: 'auto',
+              zIndex: 'auto',
+              transform: 'none',
+              borderRadius: '0px',
+              borderWidth: '0px',
+              boxShadow: 'none',
+              pointerEvents: 'auto',
+              willChange: 'auto',
+            });
+          }
           if (liveSiteRef?.current) {
             gsap.set(liveSiteRef.current, {
               position: 'relative',
@@ -724,25 +722,11 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
               width: '100%',
               height: 'auto',
               overflow: 'visible',
-              zIndex: 'auto',
               transform: 'none',
-              clipPath: 'none',
-              WebkitClipPath: 'none',
               pointerEvents: 'auto',
               willChange: 'auto',
             });
           }
-        },
-      });
-    }
-
-    if (cardBorderRef.current) {
-      gsap.to(cardBorderRef.current, {
-        opacity: 0,
-        duration: 0.2,
-        ease: 'power2.out',
-        onComplete: () => {
-          if (cardBorderRef.current) cardBorderRef.current.style.display = 'none';
         },
       });
     }
@@ -779,17 +763,7 @@ const GrovixIntro = ({ liveSiteRef, onComplete }) => {
 
 
 
-      {/* Mobile Synced Card Border Frame */}
-      <div
-        ref={cardBorderRef}
-        className="fixed pointer-events-none rounded-2xl border-[1.5px] border-white/40 shadow-[0_16px_45px_rgba(0,0,0,0.9),0_0_25px_rgba(47,79,210,0.3)] z-[95] will-change-transform"
-        style={{
-          display: 'none',
-          transformPerspective: 1000,
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-        }}
-      />
+
 
       {/* Kinetic Typography Layer (starts with opacity: 0 in style to eliminate any FOUC / flash of text before JS initializes) */}
       <aside

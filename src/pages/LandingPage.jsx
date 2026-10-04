@@ -25,6 +25,7 @@ gsap.registerPlugin(ScrollTrigger);
 
 const LandingPage = () => {
   const containerRef = useRef(null);
+  const cardFrameRef = useRef(null);
   const liveSiteRef = useRef(null);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -91,6 +92,7 @@ const LandingPage = () => {
     >
       {/* Kinetic Brand Opening Experience (Inspired by Sadu Media for Grovix) */}
       <GrovixIntro
+        cardFrameRef={cardFrameRef}
         liveSiteRef={liveSiteRef}
         onComplete={() => {
           ScrollTrigger.refresh();
@@ -111,25 +113,27 @@ const LandingPage = () => {
       {/* Subtle Tactile Film Grain Texture (Desktop only to guarantee 120fps/60fps on phones) */}
       <div className="fixed inset-0 pointer-events-none grain-overlay z-40 opacity-40 mix-blend-multiply hidden md:block" />
 
-      {/* Live Website Content (Directly animated from small frame to full screen during intro) */}
-      <div ref={liveSiteRef} className="live-site-wrapper w-full relative">
-        <ScrollProgressHUD />
-        <Header onOpenContact={() => setIsContactOpen(true)} />
-        <main id="main-content">
-          <Hero onOpenContact={() => setIsContactOpen(true)} />
-          {/* Infinite Services Horizontal Marquee Ticker */}
-          <InfiniteMarquee />
-          <ProblemSection />
-          <ServicesSection onOpenContact={() => setIsContactOpen(true)} />
-          <SelectedWork onOpenContact={() => setIsContactOpen(true)} />
-          <ApproachSection />
-          <TechnologySection />
-          <AboutSection onOpenContact={() => setIsContactOpen(true)} />
-          <DifferentiationSection />
-          <TestimonialsSection />
-          <CTASection onOpenContact={() => setIsContactOpen(true)} />
-        </main>
-        <Footer onOpenContact={() => setIsContactOpen(true)} />
+      {/* Live Website Content inside Card Frame (Expands from card to full screen during intro) */}
+      <div ref={cardFrameRef} className="card-frame-container w-full relative">
+        <div ref={liveSiteRef} className="live-site-wrapper w-full relative">
+          <ScrollProgressHUD />
+          <Header onOpenContact={() => setIsContactOpen(true)} />
+          <main id="main-content">
+            <Hero onOpenContact={() => setIsContactOpen(true)} />
+            {/* Infinite Services Horizontal Marquee Ticker */}
+            <InfiniteMarquee />
+            <ProblemSection />
+            <ServicesSection onOpenContact={() => setIsContactOpen(true)} />
+            <SelectedWork onOpenContact={() => setIsContactOpen(true)} />
+            <ApproachSection />
+            <TechnologySection />
+            <AboutSection onOpenContact={() => setIsContactOpen(true)} />
+            <DifferentiationSection />
+            <TestimonialsSection />
+            <CTASection onOpenContact={() => setIsContactOpen(true)} />
+          </main>
+          <Footer onOpenContact={() => setIsContactOpen(true)} />
+        </div>
       </div>
 
       <ContactModal
