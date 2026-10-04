@@ -8,4 +8,4 @@
 
 export const GOOGLE_SHEETS_URL =
   import.meta.env.VITE_GOOGLE_SHEETS_URL ||
-  'https://script.google.com/macros/s/AKfycbz9FW0c8MZeA1A2ruYDyqTQkNEHQwM5IzPfjyrktE6_n-hxKfnUOgtff0YG4CQFoPz-ig/exec';
+  'https://script.google.com/macros/s/AKfycbzPLAdpGYok33SqwYq_YPV23hfOko6xbmieVy4Fe0PjE5GQyxIZbogj5NmrKksjLB8qFg/exec';
